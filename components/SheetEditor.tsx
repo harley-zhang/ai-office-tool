@@ -93,6 +93,30 @@ export default function SheetEditor({ fileId }: SheetEditorProps) {
   }, [fileId, !!file]);
 
   useEffect(() => {
+    // handler to insert Used by AI in A1
+    const h = (e: any) => {
+      if (e?.detail?.id !== fileId) return;
+      try {
+        const api = univerRef.current?.univerAPI;
+        if (!api) return;
+        const wb = api.getActiveWorkbook?.();
+        const sheet = wb?.getActiveSheet?.();
+        // Most univer sheet APIs support setValue(row,col,value)
+        // fallback: getRange and setValue
+        if (sheet?.setValue) {
+          sheet.setValue(0, 0, 'Used by AI'); // row 0 col 0 is A1
+        } else if (sheet?.getRange) {
+          sheet.getRange('A1')?.setValue?.('Used by AI');
+        }
+      } catch (err) {
+        console.error('Sheet appendText failed', err);
+      }
+    };
+    window.addEventListener('insert-ai-flag', h);
+    return () => window.removeEventListener('insert-ai-flag', h);
+  }, [fileId]);
+
+  useEffect(() => {
     return () => {
       if (univerRef.current) {
         univerRef.current.univer.dispose();

@@ -12,7 +12,7 @@ import { TbCopy } from 'react-icons/tb';
 import { RiLoopRightLine } from 'react-icons/ri';
 
 export default function ChatSidebar() {
-  const { files } = useFiles();
+  const { files, updateFile } = useFiles();
   const [contextIds, setContextIds] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [messageContexts, setMessageContexts] = useState<Record<string, string[]>>({});
@@ -21,6 +21,12 @@ export default function ChatSidebar() {
   const [showCopyTooltip, setShowCopyTooltip] = useState<string | null>(null);
 
   const { messages, input, setInput, handleInputChange, append, stop, status } = useChat({ sendExtraMessageFields: true });
+
+  const autoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
+    handleInputChange(e);
+  };
 
   const toggleFile = (id: string) => {
     setContextIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -32,6 +38,12 @@ export default function ChatSidebar() {
     if (!input.trim() && contextIds.length === 0) return;
 
     const selectedFiles = files.filter(f => contextIds.includes(f.id));
+    // Let each selected document append the marker via its own editor instance
+    selectedFiles.forEach((f) => {
+      if (f.type === 'doc' || f.type === 'sheet') {
+        window.dispatchEvent(new CustomEvent('insert-ai-flag', { detail: { id: f.id } }));
+      }
+    });
 
     const tempId = `temp-${Date.now()}`;
     
@@ -216,11 +228,16 @@ export default function ChatSidebar() {
               </div>
             )}
           </div>
-          <input
+          <textarea
             value={input}
-            onChange={handleInputChange}
+            onChange={autoResize}
             placeholder="Say something..."
-            className="w-full text-sm outline-none bg-transparent break-words whitespace-pre-wrap resize-none"
+            className="w-full text-sm outline-none bg-transparent resize-none max-h-48 overflow-y-auto"
+            style={{ 
+              wordWrap: 'break-word', 
+              overflowWrap: 'break-word',
+              minHeight: '1.5rem'
+            }}
           />
           {/* Mode selector below input */}
           <div className="mt-3 flex items-center justify-between">
