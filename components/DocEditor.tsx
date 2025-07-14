@@ -30,7 +30,7 @@ export default function DocEditor({ fileId }: DocEditorProps) {
   useEffect(() => {
     updateFileRef.current = updateFile;
   }, [updateFile]);
-
+  
   const file = files.find(f => f.id === fileId);
 
   // mount editor once when file becomes available

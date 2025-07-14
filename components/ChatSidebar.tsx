@@ -4,14 +4,23 @@ import { useChat } from '@ai-sdk/react';
 import { useFiles } from '../context/FileContext';
 import React, { useState } from 'react';
 import { LuFileText, LuFileSpreadsheet } from 'react-icons/lu';
+import { RiRobot2Line } from 'react-icons/ri';
+import { MdOutlineChatBubbleOutline } from 'react-icons/md';
+import { BsChevronExpand } from 'react-icons/bs';
+import { FaArrowUp, FaStop } from 'react-icons/fa6';
+import { TbCopy } from 'react-icons/tb';
+import { RiLoopRightLine } from 'react-icons/ri';
 
 export default function ChatSidebar() {
   const { files } = useFiles();
   const [contextIds, setContextIds] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [messageContexts, setMessageContexts] = useState<Record<string, string[]>>({});
+  const [mode, setMode] = useState<'Agent' | 'Ask'>('Agent');
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [showCopyTooltip, setShowCopyTooltip] = useState<string | null>(null);
 
-  const { messages, input, setInput, handleInputChange, append } = useChat({ sendExtraMessageFields: true });
+  const { messages, input, setInput, handleInputChange, append, stop, status } = useChat({ sendExtraMessageFields: true });
 
   const toggleFile = (id: string) => {
     setContextIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -46,6 +55,34 @@ export default function ChatSidebar() {
     setShowDropdown(false);
   };
 
+  const copyToClipboard = async (text: string, messageId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setShowCopyTooltip(messageId);
+      setTimeout(() => setShowCopyTooltip(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const retryMessage = (messageIndex: number) => {
+    if (messageIndex > 0) {
+      const userMessage = messages[messageIndex - 1];
+      const contextForMessage = messageContexts[userMessage.id] || messageContexts[(userMessage.data as any)?.tempId] || [];
+      const selectedFiles = files.filter(f => contextForMessage.includes(f.id));
+      
+      append(
+        {
+          role: 'user',
+          content: userMessage.content,
+        } as any,
+        {
+          body: { context: selectedFiles.map(({ id, name, content, type }) => ({ id, name, content, type })) },
+        }
+      );
+    }
+  };
+
   return (
     <div className="fixed right-0 top-0 h-screen w-96 bg-[#F8FAFD] flex flex-col p-2 border-l border-[#EEEEEC]">
       <div className="mb-4">
@@ -53,11 +90,11 @@ export default function ChatSidebar() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+      <div className="flex-1 overflow-y-auto space-y-2 pr-2">
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`break-words text-sm p-3 ${
+            className={`whitespace-pre-wrap break-words text-sm p-3 ${
               message.role === 'user'
                 ? 'bg-white border border-gray-100 rounded-xl'
                 : ''
@@ -90,6 +127,39 @@ export default function ChatSidebar() {
               }
               return null;
             })}
+            
+            {/* Action buttons for AI messages */}
+            {message.role === 'assistant' && (
+              <div className="mt-2 flex items-center space-x-2 opacity-0 animate-fade-in">
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      const text = message.parts.filter(p => p.type === 'text').map(p => p.text).join('');
+                      copyToClipboard(text, message.id);
+                    }}
+                    className="flex items-center space-x-1 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+                  >
+                    <TbCopy className="w-4 h-4" />
+                    <span className="text-xs">Copy</span>
+                  </button>
+                  {showCopyTooltip === message.id && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 bg-black bg-opacity-80 text-white text-xs rounded whitespace-nowrap">
+                      Copied
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    const messageIndex = messages.findIndex(m => m.id === message.id);
+                    retryMessage(messageIndex);
+                  }}
+                  className="flex items-center space-x-1 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+                >
+                  <RiLoopRightLine className="w-4 h-4" />
+                  <span className="text-xs">Retry</span>
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -136,9 +206,9 @@ export default function ChatSidebar() {
                     className={`w-full flex items-center px-3 py-2 text-left hover:bg-gray-50 text-xs cursor-pointer ${contextIds.includes(file.id) ? 'bg-gray-100' : ''}`}
                   >
                     {file.type === 'doc' ? (
-                      <LuFileText className="w-3 h-3 mr-2 text-blue-500" />
+                      <LuFileText className="w-3 h-3 mr-2 text-blue-500 flex-shrink-0" />
                     ) : (
-                      <LuFileSpreadsheet className="w-3 h-3 mr-2 text-[#1DB044]" />
+                      <LuFileSpreadsheet className="w-3 h-3 mr-2 text-[#1DB044] flex-shrink-0" />
                     )}
                     <span className="truncate">{file.name}</span>
                   </button>
@@ -150,8 +220,53 @@ export default function ChatSidebar() {
             value={input}
             onChange={handleInputChange}
             placeholder="Say something..."
-            className="w-full text-sm outline-none bg-transparent break-words"
+            className="w-full text-sm outline-none bg-transparent break-words whitespace-pre-wrap resize-none"
           />
+          {/* Mode selector below input */}
+          <div className="mt-3 flex items-center justify-between">
+            <div className="relative flex items-center">
+              {mode === 'Agent' ? (
+                <RiRobot2Line className="absolute left-2 w-3 h-3 text-gray-500 pointer-events-none z-10" />
+              ) : (
+                <MdOutlineChatBubbleOutline className="absolute left-2 w-3 h-3 text-gray-500 pointer-events-none z-10" />
+              )}
+              <select
+                value={mode}
+                onChange={(e) => setMode(e.target.value as 'Agent' | 'Ask')}
+                className="text-xs text-gray-600 bg-gray-50 rounded-full pl-7 pr-6 py-0.5 appearance-none cursor-pointer hover:bg-gray-100 transition-colors"
+              >
+                <option value="Agent">Agent</option>
+                <option value="Ask">Ask</option>
+              </select>
+              <BsChevronExpand className="absolute right-2 w-2.5 h-2.5 text-gray-400 pointer-events-none" />
+            </div>
+            
+            {/* Send/Stop button */}
+            <div className="flex items-center">
+              {status !== 'ready' ? (
+                <button
+                  type="button"
+                  onClick={stop}
+                  className="w-6 h-6 bg-gray-400 hover:bg-gray-500 rounded-full flex items-center justify-center transition-colors"
+                >
+                  <FaStop className="w-2.5 h-2.5 text-white" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const form = new Event('submit', { bubbles: true, cancelable: true });
+                    const formElement = document.querySelector('form');
+                    if (formElement) formElement.dispatchEvent(form);
+                  }}
+                  disabled={!input.trim() && contextIds.length === 0}
+                  className="w-6 h-6 bg-gray-400 hover:bg-gray-500 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-full flex items-center justify-center transition-colors"
+                >
+                  <FaArrowUp className="w-2.5 h-2.5 text-white" />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </form>
       {/* Global overlay to close @ dropdown */}

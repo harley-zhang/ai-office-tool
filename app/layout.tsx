@@ -17,7 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased" suppressHydrationWarning>
         <FileProvider>
-          {children}
+        {children}
           <ChatSidebar />
         </FileProvider>
       </body>
