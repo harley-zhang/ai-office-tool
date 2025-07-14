@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Aira - Office Suite
+
+A modern office suite built with Next.js, TypeScript, and Tailwind CSS. This application provides document and spreadsheet editing capabilities using UniverJS.
+
+## Features
+
+- **Document Editor**: Rich text editing with UniverJS document core
+- **Spreadsheet Editor**: Full-featured spreadsheet editing with UniverJS sheets
+- **File Management**: Create, open, and delete documents and spreadsheets
+- **Tabbed Interface**: Work with multiple files simultaneously
+- **Auto-save**: Automatic saving of document changes
+- **Responsive Design**: Modern UI with Tailwind CSS
+
+## Tech Stack
+
+- **Next.js 15.3.5** - React framework with App Router
+- **TypeScript** - Type-safe JavaScript
+- **Tailwind CSS** - Utility-first CSS framework
+- **UniverJS** - Office suite components
+- **React Icons** - Icon library
 
 ## Getting Started
 
-First, run the development server:
-
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Run the development server:
+```bash
+pnpm dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project Structure
 
-## Learn More
+```
+aira/
+├── app/
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   ├── DocEditor.tsx
+│   ├── DriveInterface.tsx
+│   └── SheetEditor.tsx
+├── context/
+│   └── FileContext.tsx
+└── package.json
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Usage
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Creating Files**: Click the "New" button to create a document or spreadsheet
+2. **Opening Files**: Click on any file in the sidebar to open it
+3. **Editing**: Use the full-featured editors for documents and spreadsheets
+4. **Multiple Files**: Files open in tabs for easy switching
+5. **Auto-save**: Changes are automatically saved every 2 seconds
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Development
 
-## Deploy on Vercel
+- Built with Next.js App Router for modern React development
+- TypeScript for type safety and better developer experience
+- Tailwind CSS for consistent and responsive styling
+- UniverJS for professional office suite functionality
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `pnpm dev` - Start development server
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm lint` - Run ESLint
