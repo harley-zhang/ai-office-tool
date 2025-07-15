@@ -8,6 +8,13 @@ interface FileType {
   type: 'doc' | 'sheet';
   content: any;
   createdAt: string;
+  parentFolderId?: string | null;
+}
+
+interface FolderType {
+  id: string;
+  name: string;
+  createdAt: string;
 }
 
 interface TabType {
@@ -18,15 +25,20 @@ interface TabType {
 
 interface FileState {
   files: FileType[];
+  folders: FolderType[];
   openTabs: TabType[];
   activeTab: string | null;
 }
 
 type FileAction = 
   | { type: 'LOAD_FILES'; payload: FileType[] }
+  | { type: 'LOAD_STATE'; payload: { files: FileType[]; folders: FolderType[] } }
   | { type: 'CREATE_FILE'; payload: { name: string; type: 'doc' | 'sheet' } }
   | { type: 'DELETE_FILE'; payload: string }
   | { type: 'UPDATE_FILE'; payload: { id: string; content: any } }
+  | { type: 'UPDATE_FILE_PARENT'; payload: { id: string; parentFolderId: string | null } }
+  | { type: 'CREATE_FOLDER'; payload: { name: string } }
+  | { type: 'DELETE_FOLDER'; payload: string }
   | { type: 'OPEN_TAB'; payload: string }
   | { type: 'CLOSE_TAB'; payload: string }
   | { type: 'SET_ACTIVE_TAB'; payload: string };
@@ -38,20 +50,24 @@ interface FileContextType extends FileState {
   openTab: (id: string) => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
+  createFolder: (name: string) => void;
+  deleteFolder: (id: string) => void;
+  updateFileParent: (id: string, parentFolderId: string | null) => void;
 }
 
 const FileContext = createContext<FileContextType | undefined>(undefined);
 
 const initialState: FileState = {
   files: [],
+  folders: [],
   openTabs: [],
   activeTab: null,
 };
 
 function fileReducer(state: FileState, action: FileAction): FileState {
   switch (action.type) {
-    case 'LOAD_FILES':
-      return { ...state, files: action.payload };
+    case 'LOAD_STATE':
+      return { ...state, files: action.payload.files, folders: action.payload.folders };
     
     case 'CREATE_FILE':
       const newFile: FileType = {
@@ -84,6 +100,30 @@ function fileReducer(state: FileState, action: FileAction): FileState {
             ? { ...file, content: action.payload.content }
             : file
         ),
+      };
+
+    case 'UPDATE_FILE_PARENT':
+      return {
+        ...state,
+        files: state.files.map(file => file.id === action.payload.id ? { ...file, parentFolderId: action.payload.parentFolderId } : file),
+      };
+
+    case 'CREATE_FOLDER':
+      const newFolder: FolderType = {
+        id: Date.now().toString(),
+        name: action.payload.name,
+        createdAt: new Date().toISOString(),
+      };
+      return {
+        ...state,
+        folders: [...state.folders, newFolder],
+      };
+
+    case 'DELETE_FOLDER':
+      return {
+        ...state,
+        folders: state.folders.filter(f => f.id !== action.payload),
+        files: state.files.map(f => f.parentFolderId === action.payload ? { ...f, parentFolderId: null } : f),
       };
     
     case 'OPEN_TAB':
@@ -131,8 +171,11 @@ export function FileProvider({ children }: FileProviderProps) {
 
   useEffect(() => {
     const savedFiles = localStorage.getItem('files');
-    if (savedFiles) {
-      dispatch({ type: 'LOAD_FILES', payload: JSON.parse(savedFiles) });
+    const savedFolders = localStorage.getItem('folders');
+    const filesArr: FileType[] = savedFiles ? JSON.parse(savedFiles) : [];
+    const foldersArr: FolderType[] = savedFolders ? JSON.parse(savedFolders) : [];
+    if (filesArr.length || foldersArr.length) {
+      dispatch({ type: 'LOAD_STATE', payload: { files: filesArr, folders: foldersArr } });
     }
     setIsLoaded(true);
   }, []);
@@ -140,12 +183,20 @@ export function FileProvider({ children }: FileProviderProps) {
   useEffect(() => {
     if (isLoaded) {
       localStorage.setItem('files', JSON.stringify(state.files));
-      console.log('Persisted files to localStorage', state.files);
+      localStorage.setItem('folders', JSON.stringify(state.folders));
     }
-  }, [state.files, isLoaded]);
+  }, [state.files, state.folders, isLoaded]);
 
   const createFile = (name: string, type: 'doc' | 'sheet') => {
     dispatch({ type: 'CREATE_FILE', payload: { name, type } });
+  };
+
+  const createFolder = (name: string) => {
+    dispatch({ type: 'CREATE_FOLDER', payload: { name } });
+  };
+
+  const deleteFolder = (id: string) => {
+    dispatch({ type: 'DELETE_FOLDER', payload: id });
   };
 
   const deleteFile = (id: string) => {
@@ -155,6 +206,10 @@ export function FileProvider({ children }: FileProviderProps) {
   const updateFile = (id: string, content: any) => {
     console.log('updateFile called', id, content);
     dispatch({ type: 'UPDATE_FILE', payload: { id, content } });
+  };
+
+  const updateFileParent = (id: string, parentFolderId: string | null) => {
+    dispatch({ type: 'UPDATE_FILE_PARENT', payload: { id, parentFolderId } });
   };
 
   const openTab = (id: string) => {
@@ -174,8 +229,11 @@ export function FileProvider({ children }: FileProviderProps) {
       value={{
         ...state,
         createFile,
+        createFolder,
+        deleteFolder,
         deleteFile,
         updateFile,
+        updateFileParent,
         openTab,
         closeTab,
         setActiveTab,

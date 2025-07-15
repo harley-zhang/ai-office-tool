@@ -177,10 +177,10 @@ export default function ChatSidebar() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-2 pr-2">
         {messages.length === 0 && (
-          <div className="flex items-center justify-center h-full text-gray-400 text-sm text-center">
+          <div className="flex items-center justify-center h-full text-gray-500 text-center">
             <div>
-              <p className="text-base text-gray-500" style={{fontFamily:'"DM Mono", monospace'}}>WELCOME TO AIRA</p>
-              <p className="text-xs mt-1">Chat to start working</p>
+              <p className="text-lg text-gray-600" style={{fontFamily:'"DM Mono", monospace'}}>WELCOME TO AIRA</p>
+              <p className="text-sm mt-1 text-gray-500">Chat to start working</p>
             </div>
           </div>
         )}
