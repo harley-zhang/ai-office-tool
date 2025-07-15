@@ -94,21 +94,20 @@ export default function DocEditor({ fileId }: DocEditorProps) {
   }, [fileId, !!file]);
 
   useEffect(() => {
-    // Listen for AI flag insertion request
     const handler = (e: any) => {
       if (!e?.detail || e.detail.id !== fileId) return;
       try {
         const api = univerRef.current?.univerAPI;
         if (!api) return;
         const doc = api.getActiveDocument?.();
-        // Append text; Univer will handle model integrity
-        doc?.appendText?.('\rUsed by AI');
+        const textToAppend = e.detail.text;
+        doc?.appendText?.('\r' + textToAppend);
       } catch (err) {
         console.error('appendText failed', err);
       }
     };
-    window.addEventListener('insert-ai-flag', handler);
-    return () => window.removeEventListener('insert-ai-flag', handler);
+    window.addEventListener('edit-doc', handler);
+    return () => window.removeEventListener('edit-doc', handler);
   }, [fileId]);
 
   useEffect(() => {

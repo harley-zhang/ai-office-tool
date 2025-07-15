@@ -14,12 +14,21 @@ importers:
       '@ai-sdk/react':
         specifier: ^1.2.12
         version: 1.2.12(react@19.1.0)(zod@4.0.5)
+      '@univerjs/core':
+        specifier: ^0.9.2
+        version: 0.9.2(@grpc/grpc-js@1.13.4)(@wendellhu/redi@0.19.2(react@19.1.0))(rxjs@7.8.2)
+      '@univerjs/docs':
+        specifier: ^0.9.2
+        version: 0.9.2(@grpc/grpc-js@1.13.4)(@wendellhu/redi@0.19.2(react@19.1.0))(rxjs@7.8.2)
       '@univerjs/preset-docs-core':
         specifier: ^0.9.2
         version: 0.9.2(@grpc/grpc-js@1.13.4)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(@wendellhu/redi@0.19.2(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(rxjs@7.8.2)
       '@univerjs/presets':
         specifier: ^0.9.2
         version: 0.9.2(@grpc/grpc-js@1.13.4)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(@wendellhu/redi@0.19.2(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(rxjs@7.8.2)
+      '@univerjs/sheets':
+        specifier: ^0.9.2
+        version: 0.9.2(@grpc/grpc-js@1.13.4)(@wendellhu/redi@0.19.2(react@19.1.0))(rxjs@7.8.2)
       ai:
         specifier: ^4.3.17
         version: 4.3.17(react@19.1.0)(zod@4.0.5)

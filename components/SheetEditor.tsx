@@ -93,27 +93,41 @@ export default function SheetEditor({ fileId }: SheetEditorProps) {
   }, [fileId, !!file]);
 
   useEffect(() => {
-    // handler to insert Used by AI in A1
-    const h = (e: any) => {
-      if (e?.detail?.id !== fileId) return;
+    // listen for edit-sheet events
+    const editHandler = (e: any) => {
+      const detail = e?.detail;
+      if (!detail || detail.id !== fileId) return;
+      const { cell, value } = detail;
       try {
         const api = univerRef.current?.univerAPI;
         if (!api) return;
         const wb = api.getActiveWorkbook?.();
         const sheet = wb?.getActiveSheet?.();
-        // Most univer sheet APIs support setValue(row,col,value)
-        // fallback: getRange and setValue
-        if (sheet?.setValue) {
-          sheet.setValue(0, 0, 'Used by AI'); // row 0 col 0 is A1
-        } else if (sheet?.getRange) {
-          sheet.getRange('A1')?.setValue?.('Used by AI');
+        if (!sheet) return;
+        if (sheet.setValue) {
+          // convert A1 to row, col zero-indexed
+          const match = /^([A-Za-z]+)(\d+)$/.exec(cell);
+          if (match) {
+            const colStr = match[1].toUpperCase();
+            const rowIdx = parseInt(match[2], 10) - 1;
+            let colIdx = 0;
+            for (let i = 0; i < colStr.length; i++) {
+              colIdx = colIdx * 26 + (colStr.charCodeAt(i) - 64);
+            }
+            colIdx -= 1;
+            sheet.setValue(rowIdx, colIdx, value);
+          }
+        } else if (sheet.getRange) {
+          sheet.getRange(cell)?.setValue?.(value);
         }
       } catch (err) {
-        console.error('Sheet appendText failed', err);
+        console.error('edit-sheet failed', err);
       }
     };
-    window.addEventListener('insert-ai-flag', h);
-    return () => window.removeEventListener('insert-ai-flag', h);
+    window.addEventListener('edit-sheet', editHandler);
+    return () => {
+      window.removeEventListener('edit-sheet', editHandler);
+    };
   }, [fileId]);
 
   useEffect(() => {

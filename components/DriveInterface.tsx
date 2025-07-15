@@ -64,7 +64,9 @@ export default function DriveInterface() {
       {/* Sidebar */}
       <div className="w-48 bg-[#F8FAFD] flex flex-col px-1.5 py-4 border-r border-[#EEEEEC]">
         <div className="px-4">
-          <h1 className="text-xl font-semibold text-gray-800">Aira</h1>
+          <h1 className="text-xl font-semibold text-gray-800" style={{fontFamily:'"DM Mono", monospace'}}>
+            AIRA
+          </h1>
         </div>
         
         {/* Create button */}
@@ -180,21 +182,21 @@ export default function DriveInterface() {
         )}
 
         {/* Editor area */}
-        <div className="flex-1 overflow-hidden">
-          {activeTab && activeFile ? (
-            activeFile.type === 'doc' ? (
-              <DocEditor fileId={activeTab} />
-            ) : (
-              <SheetEditor fileId={activeTab} />
-            )
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-500">
-              <div className="text-center">
-                <h2 className="text-xl font-medium mb-2">Welcome to Aira</h2>
-                <p className="text-gray-400">Create a new document or spreadsheet to get started</p>
-              </div>
+        <div className="flex-1 overflow-hidden relative">
+          {/* no placeholder when no file; chat fills space */}
+
+          {openTabs.map((tab) => (
+            <div
+              key={tab.id}
+              className={`${activeTab === tab.id ? 'block' : 'hidden'} absolute inset-0 h-full w-full`}
+            >
+              {tab.type === 'doc' ? (
+                <DocEditor fileId={tab.id} />
+              ) : (
+                <SheetEditor fileId={tab.id} />
+              )}
             </div>
-          )}
+          ))}
         </div>
       </div>
 
@@ -216,7 +218,7 @@ export default function DriveInterface() {
               placeholder="Enter file name"
               value={newFileName}
               onChange={(e) => setNewFileName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
               onKeyPress={handleKeyPress}
               autoFocus
             />
