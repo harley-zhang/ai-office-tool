@@ -62,6 +62,7 @@ export default function DocEditor({ fileId }: DocEditorProps) {
     const debouncedSave = debounce((snap: any) => {
       console.log('Saving snapshot for file', fileId, snap);
       updateFileRef.current(fileId, snap);
+      console.log('Updated file', fileId, snap);
     }, 500);
     
     const grabSnapshot = () => {
@@ -101,6 +102,7 @@ export default function DocEditor({ fileId }: DocEditorProps) {
         if (!api) return;
         const doc = api.getActiveDocument?.();
         const textToAppend = e.detail.text;
+        console.log('Appending text:', textToAppend);
         doc?.appendText?.('\r' + textToAppend);
       } catch (err) {
         console.error('appendText failed', err);

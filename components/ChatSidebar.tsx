@@ -19,7 +19,7 @@ export default function ChatSidebar() {
   const [contextIds, setContextIds] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [messageContexts, setMessageContexts] = useState<Record<string, string[]>>({});
-  const [mode, setMode] = useState<'Agent' | 'Ask'>('Agent');
+  const [mode, setMode] = useState<'Agent' | 'Ask'>('Ask');
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [showCopyTooltip, setShowCopyTooltip] = useState<string | null>(null);
 
